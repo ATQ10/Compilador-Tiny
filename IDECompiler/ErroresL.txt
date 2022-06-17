@@ -1,0 +1,4 @@
+.	Simbolo no definido en el lexema 28 (3:24)
+.	Simbolo no definido en el lexema 29 (3:25)
+.	Simbolo no definido en el lexema 30 (3:26)
+.	Simbolo no definido en el lexema 31 (3:27)

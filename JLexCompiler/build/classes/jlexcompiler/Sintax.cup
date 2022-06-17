@@ -1,0 +1,170 @@
+package jlexcompiler;
+
+import java_cup.runtime.Symbol;
+
+parser code
+{:
+    private Symbol s;
+    
+    public void syntax_error(Symbol s){
+        this.s = s;
+    }
+
+    public Symbol getS(){
+        return this.s;
+}
+:};
+
+terminal Program, Abre_llave, Cierra_llave, Punto_y_coma,
+    Int, Float, Bool, Identificador, Coma, Abre_parentesis, Cierra_parentesis, 
+    If, Then, Else, Fi, While, Do, Until, Read, Write, Or, And, True, False,
+    Menor_o_igual, Menor_que, Mayor_que, Mayor_o_igual, Igual, Igual_que, Diferente_que,
+    Suma, Resta, Multiplicacion, Division, Not, Numero, Potencia, Comentario, ERROR;
+non terminal Inicio, Lista_declaracion, Lista_sentencias, Declaracion, Tipo, 
+    Lista_id, Sentencias, Seleccion, Iteracion, Repeticion, Sent_read, 
+    Sent_write, Bloque, Asignacion, B_expresion, B_term, Not_factor,
+    B_factor, Relacion, Expresion, RelOp, Termino, SumaOp, SignoFactor, MultOp,
+    Factor, Bool_value, Comentarios, C_expresion, C_Term, Not_list, Relacion_2,
+    Expresion_2, Termino_2, Else_block, Lista_id_2;
+
+start with Inicio;
+
+Inicio ::= 
+    Program Abre_llave Lista_declaracion Lista_sentencias Cierra_llave
+    {: 
+    System.out.println("Program" + Abre_llave + "{}" + "Cierra_llave");
+    :}
+;
+
+Lista_declaracion ::=
+    Declaracion |
+    '\0'
+;
+Declaracion ::=
+    Tipo Lista_id Punto_y_coma Comentarios Lista_declaracion
+;
+Tipo ::=
+    Int |
+    Float |
+    Bool
+;
+Lista_id ::= 
+    Identificador Lista_id_2
+;
+Lista_id_2 ::= |
+    Coma Identificador Lista_id_2
+;
+
+Lista_sentencias ::= 
+    Sentencias  |
+    '\0'
+;
+Sentencias ::= 
+    Seleccion Lista_sentencias |
+    Iteracion Lista_sentencias |
+    Repeticion Lista_sentencias |
+    Sent_read Lista_sentencias |
+    Sent_write Lista_sentencias |
+    Bloque Lista_sentencias |
+    Asignacion Lista_sentencias
+;
+
+Seleccion ::=
+    If Abre_parentesis B_expresion Cierra_parentesis Then Bloque Else_block Fi
+;
+Else_block ::= |
+    Else Bloque
+;
+Iteracion ::=
+    While Abre_parentesis B_expresion Cierra_parentesis Bloque
+;
+Repeticion ::=
+    Do Bloque Until Abre_parentesis B_expresion Cierra_parentesis Punto_y_coma Comentarios
+;
+Sent_read ::=
+    Read Identificador Punto_y_coma Comentarios
+;
+Sent_write ::=
+    Write B_expresion Punto_y_coma Comentarios
+;
+Bloque ::=
+    Abre_llave Lista_sentencias Cierra_llave
+;
+Asignacion ::=
+    Identificador Igual B_expresion Punto_y_coma Comentarios
+;
+
+B_expresion ::=
+    B_term C_expresion
+;
+C_expresion ::= |
+    Or B_term C_expresion
+;
+B_term ::=
+    Not_factor C_Term
+;
+C_Term ::= |
+   And Not_factor C_Term
+;
+Not_factor ::=
+    Not_list B_factor
+;
+Not_list ::= |
+    Not Not_list
+;
+B_factor ::=
+    Bool_value | Relacion
+;
+Bool_value ::=
+    True    |
+    False
+;
+
+Relacion ::=
+    Expresion Relacion_2
+;
+Relacion_2 ::= |
+    RelOp Expresion Relacion_2
+;
+RelOp ::=
+    Menor_o_igual |
+    Menor_que |
+    Mayor_que |
+    Mayor_o_igual |
+    Igual_que |
+    Diferente_que
+;
+Expresion ::=
+    Termino Expresion_2
+;
+Expresion_2 ::= |
+    SumaOp Termino Expresion_2
+;
+Termino  ::=
+    SignoFactor Termino_2
+;
+Termino_2 ::= |
+    MultOp SignoFactor Termino_2
+;
+MultOp ::=
+    Multiplicacion |
+    Division
+;
+SignoFactor ::=
+    SumaOp Factor |
+    Factor
+;
+
+SumaOp ::=
+    Suma |
+    Resta
+;
+Factor ::=
+    Abre_parentesis B_expresion Cierra_parentesis |
+    Numero |
+    Identificador
+;
+Comentarios ::=
+    Comentario  |
+    '\0'
+;

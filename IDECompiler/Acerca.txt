@@ -1,0 +1,17 @@
+MODIFICADO DESDE COMPILADOR
+/*
+UNIVERSIDAD:
+	Universidad Autónoma de Aguascalientes
+CARRERA:
+	Ingeniería en Sistemas Computacionales
+MATERIA:
+	Compiladores
+PROFESOR:
+	Eduardo Serna-Pérez
+INTEGRANTE:
+	* Ocampo Calderón Loredana Paulette (IDUAA: 210539)
+	* Tejeda Arnoldo (IDUAA: 258694)
+*/
+
+
+******************************
