@@ -6,9 +6,9 @@ y=4; /* comentario 2 */
 a=0.0; 
 b=3.0;
 do {
-if(x<y) then{
-y=y-1
-} else {
+if(x<y) then {
+y=y-1;
+}else {
 x=x-2;
 a=a*x+b;
 y=y-1;

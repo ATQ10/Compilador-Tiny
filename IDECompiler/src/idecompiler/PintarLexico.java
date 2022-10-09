@@ -18,7 +18,7 @@ public class PintarLexico {
         if(codigo.length() >= 1){    
             pintar = new PintarPalabras();
             pintar.darEstilo(codigo);
-            String regex = "program|if|else|fi|do|until|while|read|wrire|float|int|bool|not|and|or";
+            String regex = "program|if|else|fi|do|until|while|read|write|float|int|bool|not|and|or|then";
             Pattern pat;
             pat = Pattern.compile(regex);
             Matcher m = pat.matcher(codigo);
