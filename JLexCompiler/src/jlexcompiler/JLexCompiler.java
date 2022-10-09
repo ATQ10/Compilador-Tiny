@@ -12,11 +12,14 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java_cup.runtime.Symbol;
 
 /**
@@ -24,20 +27,26 @@ import java_cup.runtime.Symbol;
  * @author HP
  */
 public class JLexCompiler {
-
+    
+    public static String tipo = "";
+    public static Map tablaSimbolos = new HashMap();
+    public static String sintactico = ""; 
+    public static String semantico = ""; 
+    public static String tablaDeSimbolos = ""; 
+    
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) throws Exception {
         // TODO code application logic here
-        String ruta1 = "C:/Users/HP/Documents/NetBeansProjects/JLexCompiler/src/jlexcompiler/Lexer.flex";
-        String ruta2 = "C:/Users/HP/Documents/NetBeansProjects/JLexCompiler/src/jlexcompiler/LexerCup.flex";
-        String[] rutaS = {"-parser", "Sintax", "C:/Users/HP/Documents/NetBeansProjects/JLexCompiler/src/jlexcompiler/Sintax.cup"};
+        String ruta1 = "C:/Users/Arnol/Documents/NetBeansProjects/Compilador-Tiny/JLexCompiler/src/jlexcompiler/Lexer.flex";
+        String ruta2 = "C:/Users/Arnol/Documents/NetBeansProjects/Compilador-Tiny/JLexCompiler/src/jlexcompiler/LexerCup.flex";
+        String[] rutaS = {"-parser", "Sintax", "C:/Users/Arnol/Documents/NetBeansProjects/Compilador-Tiny/JLexCompiler/src/jlexcompiler/Sintax.cup"};
         
         //generar(ruta1, ruta2, rutaS);
-        //"C:/Users/HP/Documents/NetBeansProjects/JLexCompiler/src/jlexcompiler/archivo.txt"
-        analizardorLexico(args);
-        analizadorSintactico(args);
+        //"C:/Users/Arnol/Documents/NetBeansProjects/Compilador-Tiny/JLexCompiler/src/jlexcompiler/archivo.txt"
+        analizardorLexico(args);        analizadorSintacticoySemantico(args);
+
     }
    
     public static void generarLexer(String ruta){
@@ -53,21 +62,21 @@ public class JLexCompiler {
         JFlex.Main.generate(archivo);
         java_cup.Main.main(rutaS);
         
-        Path rutaSym = Paths.get("C:/Users/HP/Documents/NetBeansProjects/JLexCompiler/src/jlexcompiler/sym.java");
+        Path rutaSym = Paths.get("C:/Users/Arnol/Documents/NetBeansProjects/Compilador-Tiny/JLexCompiler/src/jlexcompiler/sym.java");
         if (Files.exists(rutaSym)) {
             Files.delete(rutaSym);
         }
         Files.move(
-                Paths.get("C:/Users/HP/Documents/NetBeansProjects/JLexCompiler/sym.java"), 
-                Paths.get("C:/Users/HP/Documents/NetBeansProjects/JLexCompiler/src/jlexcompiler/sym.java")
+                Paths.get("C:/Users/Arnol/Documents/NetBeansProjects/Compilador-Tiny/JLexCompiler/sym.java"), 
+                Paths.get("C:/Users/Arnol/Documents/NetBeansProjects/Compilador-Tiny/JLexCompiler/src/jlexcompiler/sym.java")
         );
-        Path rutaSin = Paths.get("C:/Users/HP/Documents/NetBeansProjects/JLexCompiler/src/jlexcompiler/Sintax.java");
+        Path rutaSin = Paths.get("C:/Users/Arnol/Documents/NetBeansProjects/Compilador-Tiny/JLexCompiler/src/jlexcompiler/Sintax.java");
         if (Files.exists(rutaSin)) {
             Files.delete(rutaSin);
         }
         Files.move(
-                Paths.get("C:/Users/HP/Documents/NetBeansProjects/JLexCompiler/Sintax.java"), 
-                Paths.get("C:/Users/HP/Documents/NetBeansProjects/JLexCompiler/src/jlexcompiler/Sintax.java")
+                Paths.get("C:/Users/Arnol/Documents/NetBeansProjects/Compilador-Tiny/JLexCompiler/Sintax.java"), 
+                Paths.get("C:/Users/Arnol/Documents/NetBeansProjects/Compilador-Tiny/JLexCompiler/src/jlexcompiler/Sintax.java")
         );
     }
      
@@ -143,7 +152,7 @@ public class JLexCompiler {
         }
     }
     
-    public static void analizadorSintactico(String[] arg) throws FileNotFoundException, Exception{
+    public static void analizadorSintacticoySemantico(String[] arg) throws FileNotFoundException, Exception{
         // TODO add your handling code here:
         String ST = leeBuffer(new BufferedReader(new FileReader(arg[0])));
         System.out.println(ST);
@@ -152,13 +161,21 @@ public class JLexCompiler {
         int ind = 0;
         if(ruta.length > 0)
             ind = ruta.length-1;
+        //Sintactico
         String rutaSintactico = arg[0].replaceFirst(ruta[ind], "Sintactico.txt");
         String rutaErroresS = arg[0].replaceFirst(ruta[ind], "ErroresS.txt");
+        //Semantico
+        String rutaSemantico = arg[0].replaceFirst(ruta[ind], "Semantico.txt");
         try {
-            s.parse();
+            s.parse();  
+            imprimirSintactico(s.padre,0);
+            analizadorSemantico();
+            imprimirTablaSimbolos();
             System.out.println("Analisis sintactico realizado correctamente");
-            Guardar(rutaSintactico, "Analisis sintactico realizado correctamente");
+            Guardar(rutaSintactico, "Analisis sintactico realizado correctamente\n"+sintactico);
             Guardar(rutaErroresS, "");
+            Guardar(rutaSemantico, tablaDeSimbolos + semantico);
+            //imprimir(s.padre,0);
             //txtAnalizarSin.setForeground(new Color(25, 111, 61));
         } catch (Exception ex) {
             Symbol sym = s.getS();
@@ -166,8 +183,10 @@ public class JLexCompiler {
             System.out.println(resultadoError);
             Guardar(rutaErroresS, resultadoError);
             Guardar(rutaSintactico, "Error de sintaxis");
+            Guardar(rutaSemantico, "Error de sintaxis");
             //txtAnalizarSin.setForeground(Color.red);
         }
+        //imprimirGeneral(s.padre,0);
     }
     
     public static String leeBuffer(BufferedReader buffer) throws Exception
@@ -227,5 +246,147 @@ public class JLexCompiler {
         System.out.print(nCaracteres);
         return nCaracteres;
     }
+
+    private static void imprimirGeneral(Nodo padre,int espacios) {
+        impimirEspacios(espacios,true);
+        if(padre != null){
+            System.out.println(padre.getNombre() + "->" + padre.getValor());
+            espacios+=3;
+            for(int i=0;i<padre.getHijos().size();i++){
+                imprimirGeneral(padre.getHijos().get(i),espacios);
+            }
+        }
+        
+    }
     
+    private static void imprimirSintactico(Nodo padre,int espacios) {
+        Boolean sinEstilos = false;
+        if(padre != null){
+            if(padre.getNombre().equals("int")||padre.getNombre().equals("float")||padre.getNombre().equals("bool"))
+                tipo = padre.getNombre();
+            if(padre.getDeclararIdentificador()){
+                padre.setTipo(tipo);
+                impimirEspacios(espacios,sinEstilos);
+                if(tablaSimbolos.containsKey(padre.getNombre())){
+                    //System.out.println(padre.getNombre()+ " ---> El identificador ya ha sido declarado anteriormente");
+                    sintactico += padre.getNombre()+" ---> El identificador ya ha sido declarado anteriormente\n";
+                }else{
+                    //System.out.println(padre.getNombre()+ "("+padre.getTipo()+")");
+                    sintactico += padre.getNombre()+"("+padre.getTipo()+")\n";
+                    tablaSimbolos.put(padre.getNombre(), padre.getTipo());
+                }
+                espacios+=3;
+            }
+            else{
+                if(imprimible(padre.getNombre())){
+                    impimirEspacios(espacios,sinEstilos);
+                    if(padre.getSoyIdentificador()){
+                        if(tablaSimbolos.containsKey(padre.getNombre())){
+                            padre.setTipo(tablaSimbolos.get(padre.getNombre()).toString());
+                            //System.out.println(padre.getNombre()+ "("+padre.getTipo()+")");
+                            sintactico += padre.getNombre()+"("+padre.getTipo()+")\n";
+                        }else{
+                            //System.out.println(padre.getNombre()+ " ---> El identificador \""+padre.getNombre()+"\" no ha sido declarado...");
+                            sintactico += padre.getNombre()+" ---> El identificador \""+padre.getNombre()+"\" no ha sido declarado...\n";
+                            return;
+                        }
+                    }else    
+                        if(padre.getValor()!=null){
+                            //System.out.println(padre.getValor());
+                            sintactico += padre.getValor()+"\n";
+                        }
+                        else{
+                            //System.out.println(padre.getNombre());
+                            sintactico += padre.getNombre()+"\n";
+                        }
+                    espacios+=3;
+                }
+            }
+            for(int i=0;i<padre.getHijos().size();i++){
+                imprimirSintactico(padre.getHijos().get(i),espacios);
+            }
+        }
+    }
+
+    private static boolean imprimible(String nombre) {
+        switch (nombre) {
+            case "int":
+            case "float":
+            case "bool":
+            case "Lista_declaracion":
+            case "Lista_sentencias":
+            case "Lista_id":
+            case "Lista_id_2":
+            case "B_expresion":
+            case "B_term":
+            case "Not_factor":
+            case "Relacion":
+            case "Expresion":
+            case "Termino":
+            case "SignoFactor":
+            case "Sentencias":
+            case ";":
+            case "{":
+            case "(":
+            case "}":
+            case ")":
+            case "Relacion_2":
+            case "Expresion_2":
+            case "Termino_2":
+            case "Seleccion":
+                return false;
+            default:
+                return true;
+        }
+    }
+
+    private static void impimirEspacios(int espacios, boolean completo) {
+        if(espacios!=0)
+            for(int i=0;i<espacios; i++){
+                if(completo){
+                    //System.out.print(" ");
+                    sintactico += " ";
+                    continue;
+                }
+                if(espacios-3==i){
+                    //System.out.print("|__");
+                    sintactico += "|__";
+                    return;
+                }else
+                    if(i==0){
+                        //System.out.print("|"); 
+                        sintactico += "|";
+                    }
+                    else{
+                        //System.out.print(" ");
+                        sintactico += " ";
+                    } 
+            }  
+    }
+
+    private static void imprimirTablaSimbolos() {
+        //System.out.println("-------------------------------------");
+        tablaDeSimbolos += "-------------------------------------\n";
+        //System.out.println("Tabla de Simbolos");
+        tablaDeSimbolos += "Tabla de Simbolos\n";
+        //System.out.println("-------------------------------------");
+        tablaDeSimbolos += "-------------------------------------\n";
+        //System.out.println("Variable\t|Tipo");
+        tablaDeSimbolos += "Var.\t|Tipo\n"; 
+        tablaDeSimbolos += "-------------------------------------\n";
+        for (Object key: tablaSimbolos.keySet()){  
+            //System.out.println(key+ "\t|" + tablaSimbolos.get(key));
+            tablaDeSimbolos += key+ "\t|" + tablaSimbolos.get(key)+"\n";
+        }
+        tablaDeSimbolos += "-------------------------------------\n";
+        System.out.println(tablaDeSimbolos);
+    }
+
+    private static void analizadorSemantico() {
+        semantico = sintactico;
+        sintactico = sintactico.replace("(int)", "");
+        sintactico = sintactico.replace("(float)", "");
+        sintactico = sintactico.replace("(bool)", "");
+        System.out.println(semantico);
+    }
 }
