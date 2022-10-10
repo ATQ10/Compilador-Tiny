@@ -33,6 +33,9 @@ public class JLexCompiler {
     public static String sintactico = ""; 
     public static String semantico = ""; 
     public static String tablaDeSimbolos = ""; 
+    public static int contadorTemporal = 0;
+    public static String arbolTipado = "";
+    public static Boolean errorSemantico = false;
     
     /**
      * @param args the command line arguments
@@ -169,12 +172,17 @@ public class JLexCompiler {
         try {
             s.parse();  
             imprimirSintactico(s.padre,0);
-            analizadorSemantico();
+            analizadorSemantico(s.padre);
             imprimirTablaSimbolos();
             System.out.println("Analisis sintactico realizado correctamente");
             Guardar(rutaSintactico, "Analisis sintactico realizado correctamente\n"+sintactico);
-            Guardar(rutaErroresS, "");
-            Guardar(rutaSemantico, tablaDeSimbolos + semantico);
+            if(errorSemantico)
+                Guardar(rutaErroresS, "Error semántico");
+            else
+                Guardar(rutaErroresS, "");
+            //Guardar(rutaSemantico, tablaDeSimbolos + semantico);
+            Guardar(rutaSemantico, tablaDeSimbolos + arbolTipado);
+            
             //imprimir(s.padre,0);
             //txtAnalizarSin.setForeground(new Color(25, 111, 61));
         } catch (Exception ex) {
@@ -269,7 +277,7 @@ public class JLexCompiler {
                 impimirEspacios(espacios,sinEstilos);
                 if(tablaSimbolos.containsKey(padre.getNombre())){
                     //System.out.println(padre.getNombre()+ " ---> El identificador ya ha sido declarado anteriormente");
-                    sintactico += padre.getNombre()+" ---> El identificador ya ha sido declarado anteriormente\n";
+                    sintactico += padre.getNombre()+"("+padre.getTipo()+") ---> El identificador ya ha sido declarado anteriormente\n";
                 }else{
                     //System.out.println(padre.getNombre()+ "("+padre.getTipo()+")");
                     sintactico += padre.getNombre()+"("+padre.getTipo()+")\n";
@@ -293,7 +301,11 @@ public class JLexCompiler {
                     }else    
                         if(padre.getValor()!=null){
                             //System.out.println(padre.getValor());
-                            sintactico += padre.getValor()+"\n";
+                            if(padre.getValor().contains("."))
+                                padre.setTipo("float");
+                            else
+                                padre.setTipo("int");
+                            sintactico += padre.getValor()+"("+padre.getTipo()+")\n";
                         }
                         else{
                             //System.out.println(padre.getNombre());
@@ -372,21 +384,173 @@ public class JLexCompiler {
         //System.out.println("-------------------------------------");
         tablaDeSimbolos += "-------------------------------------\n";
         //System.out.println("Variable\t|Tipo");
-        tablaDeSimbolos += "Var.\t|Tipo\n"; 
+        tablaDeSimbolos += "Var.\tTipo\n"; 
         tablaDeSimbolos += "-------------------------------------\n";
         for (Object key: tablaSimbolos.keySet()){  
             //System.out.println(key+ "\t|" + tablaSimbolos.get(key));
-            tablaDeSimbolos += key+ "\t|" + tablaSimbolos.get(key)+"\n";
+            tablaDeSimbolos += key+ "\t" + tablaSimbolos.get(key)+"\n";
         }
         tablaDeSimbolos += "-------------------------------------\n";
         System.out.println(tablaDeSimbolos);
     }
 
-    private static void analizadorSemantico() {
+    private static void analizadorSemantico(Nodo padre) {
         semantico = sintactico;
         sintactico = sintactico.replace("(int)", "");
         sintactico = sintactico.replace("(float)", "");
         sintactico = sintactico.replace("(bool)", "");
-        System.out.println(semantico);
+        //System.out.println(semantico);
+        String[] codigo = semantico.split("\n");
+        try{
+        validarTipos(codigo);
+        }catch(Exception e){
+            System.err.println(e.toString());
+        }
+    }
+
+    private static void validarTipos(String[] codigo) {
+        for(int i=0;i<codigo.length;i++){
+            //System.out.print(codigo[i]);
+            if(codigo[i].contains("=")&&!codigo[i].contains("==")&&!codigo[i].contains(">=")){
+                int ind = i;
+                do{
+                    if(ind+1>=codigo.length)
+                        break;
+                }while(proximaSentencia(codigo[++ind]));
+                int lim = i;
+                i = ind-1;
+                lim= i-lim;
+                switch (lim) {
+                    case 2:
+                        String tipoResultante = compararTipos(codigo[i-1],codigo[i]);
+                        //System.out.println(" --> "+tipoResultante);
+                        codigo[i-2] += " --> "+tipoResultante;
+                        //System.out.println(codigo[i-1]);
+                        //System.out.print(codigo[i]);
+                        break;
+                    case 4:
+                        String nuevoTipo = combinarTipos(codigo[i-1],codigo[i]);
+                        if(!nuevoTipo.contains("ERROR")){
+                            tablaSimbolos.put("T"+contadorTemporal, nuevoTipo);
+                            codigo[i-2]+=" --> "+nuevoTipo+ " T"+contadorTemporal++;
+                        }else{
+                            codigo[i-2]+=" --> "+nuevoTipo;
+                            errorSemantico = true;
+                        }
+                        tipoResultante = compararTipos(codigo[i-3],codigo[i-2]);
+                        //System.out.println(" --> "+tipoResultante);
+                        codigo[i-4] += " --> "+tipoResultante;
+                        //System.out.println(codigo[i-3]);
+                        //System.out.println(codigo[i-2]);
+                        //System.out.println(codigo[i-1]);
+                        //System.out.print(codigo[i]);
+                        break;
+                    case 6:
+                        nuevoTipo = combinarTipos(codigo[i-2],codigo[i-1]);
+                        if(!nuevoTipo.contains("ERROR")){
+                            tablaSimbolos.put("T"+contadorTemporal, nuevoTipo);
+                            codigo[i-3]+=" --> "+nuevoTipo+ " T"+contadorTemporal++;
+                        }else{
+                            codigo[i-3]+=" --> "+nuevoTipo;
+                            errorSemantico = true;
+                        }
+                        nuevoTipo = combinarTipos(codigo[i-3],codigo[i]);
+                        if(!nuevoTipo.contains("ERROR")){
+                            tablaSimbolos.put("T"+contadorTemporal, nuevoTipo);
+                            codigo[i-4]+=" --> "+nuevoTipo+ " T"+contadorTemporal++;
+                        }else{
+                            codigo[i-4]+=" --> "+nuevoTipo;
+                            errorSemantico = true;
+                        }
+                        
+                        tipoResultante = compararTipos(codigo[i-5],codigo[i-4]);
+                        //System.out.println(" --> "+tipoResultante);
+                        codigo[i-6] += " --> "+tipoResultante;
+                        //System.out.println(codigo[i-5]);
+                        //System.out.println(codigo[i-4]);
+                        //System.out.println(codigo[i-3]);
+                        //System.out.println(codigo[i-2]);
+                        //System.out.println(codigo[i-1]);
+                        //System.out.print(codigo[i]);
+                        
+                        break;
+                    default:
+                }
+                System.out.println();
+            }else{
+                System.out.println();
+            }
+        }
+        for(int i=0;i<codigo.length;i++)
+            arbolTipado+=codigo[i]+"\n";
+        System.out.println(arbolTipado);
+    }
+
+    private static boolean proximaSentencia(String codigo) {
+        if(codigo.contains("int")
+         ||codigo.contains("float")
+         ||codigo.contains("bool")
+         ||codigo.contains("+")
+         ||codigo.contains("-")
+         ||codigo.contains("*")
+         ||codigo.contains("/")
+        ) return true;
+        else
+            return false;
+    }
+
+    private static String compararTipos(String ident1, String ident2) {
+        String iguales = "";
+        if(ident1.contains("int")){
+            if(ident2.contains("int"))
+                iguales = "int";
+            else
+                if(ident2.contains("float"))
+                    iguales = "ERROR SEMANTICO";
+                else
+                    if(ident2.contains("bool"))
+                        iguales = "ERROR SEMANTICO";
+        }else{
+            if(ident1.contains("float")){
+                if(ident2.contains("int"))
+                    iguales = "float";
+                else
+                    if(ident2.contains("float"))
+                        iguales = "float";
+                    else
+                        if(ident2.contains("bool"))
+                            iguales = "ERROR SEMANTICO";
+                }
+        }
+        if(iguales.contains("ERROR"))
+            errorSemantico = true;
+        return iguales;
+    }
+
+    private static String combinarTipos(String ident1, String ident2) {
+        String iguales = "";
+        if(ident1.contains("int")){
+            if(ident2.contains("int"))
+                iguales = "int";
+            else
+                if(ident2.contains("float"))
+                    iguales = "float";
+                else
+                    if(ident2.contains("bool"))
+                        iguales = "ERROR SEMANTICO";
+        }else{
+            if(ident1.contains("float")){
+                if(ident2.contains("int"))
+                    iguales = "float";
+                else
+                    if(ident2.contains("float"))
+                        iguales = "float";
+                    else
+                        if(ident2.contains("bool"))
+                            iguales = "ERROR SEMANTICO";
+                }
+        }
+            
+        return iguales;
     }
 }

@@ -35,7 +35,7 @@ Program
 |                 |__y
 |                 |__-
 |                    |__y
-|                    |__1
+|                    |__1.0
 |        |__else
 |           |__Bloque
 |              |__Asignacion

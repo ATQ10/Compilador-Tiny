@@ -42,8 +42,8 @@
 42	=	Es un operador (Igual)	10	2
 43	y	Es un Identificador	10	3
 44	-	Es un operador (Resta)	10	4
-45	1	Es un Numero	10	5
-46	;	Es un caracter especial (Punto_y_coma)	10	6
+45	1.0	Es un Numero	10	5
+46	;	Es un caracter especial (Punto_y_coma)	10	8
 47	}	Es un caracter especial (Cierra_llave)	11	1
 48	else	Es una palabra Reservada	11	2
 49	{	Es un caracter especial (Abre_llave)	11	7

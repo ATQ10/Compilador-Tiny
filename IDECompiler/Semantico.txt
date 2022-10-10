@@ -1,12 +1,17 @@
 -------------------------------------
 Tabla de Simbolos
 -------------------------------------
-Var.	|Tipo
+Var.	Tipo
 -------------------------------------
-a	|float
-b	|float
-x	|int
-y	|int
+T4	int
+a	float
+b	float
+x	int
+y	int
+T0	int
+T1	int
+T2	float
+T3	float
 -------------------------------------
 Program
 |__Declaracion
@@ -16,21 +21,21 @@ Program
 |  |__a(float)
 |  |__b(float)
 |__Asignacion
-|  |__=
+|  |__= --> int
 |     |__x(int)
-|     |__5
+|     |__5(int)
 |__Asignacion
-|  |__=
+|  |__= --> int
 |     |__y(int)
-|     |__4
+|     |__4(int)
 |__Asignacion
-|  |__=
+|  |__= --> float
 |     |__a(float)
-|     |__0.0
+|     |__0.0(float)
 |__Asignacion
-|  |__=
+|  |__= --> float
 |     |__b(float)
-|     |__3.0
+|     |__3.0(float)
 |__do
 |  |__Bloque
 |     |__if
@@ -40,42 +45,42 @@ Program
 |        |__then
 |        |__Bloque
 |           |__Asignacion
-|              |__=
+|              |__= --> int
 |                 |__y(int)
-|                 |__-
+|                 |__- --> int T0
 |                    |__y(int)
-|                    |__1
+|                    |__1(int)
 |        |__else
 |           |__Bloque
 |              |__Asignacion
-|                 |__=
+|                 |__= --> int
 |                    |__x(int)
-|                    |__-
+|                    |__- --> int T1
 |                       |__x(int)
-|                       |__2
+|                       |__2(int)
 |              |__Asignacion
-|                 |__=
+|                 |__= --> float
 |                    |__a(float)
-|                    |__+
-|                       |__*
+|                    |__+ --> float T3
+|                       |__* --> float T2
 |                          |__a(float)
 |                          |__x(int)
 |                       |__b(float)
 |              |__Asignacion
-|                 |__=
+|                 |__= --> int
 |                    |__y(int)
-|                    |__-
+|                    |__- --> int T4
 |                       |__y(int)
-|                       |__1
+|                       |__1(int)
 |        |__fi
 |     |__while
 |        |__==
 |           |__a(float)
-|           |__3
+|           |__3(int)
 |        |__Bloque
 |           |__write
 |              |__a(float)
 |  |__until
 |  |__>=
 |     |__y(int)
-|     |__0
+|     |__0(int)
