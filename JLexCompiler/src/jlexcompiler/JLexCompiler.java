@@ -278,6 +278,7 @@ public class JLexCompiler {
                 if(tablaSimbolos.containsKey(padre.getNombre())){
                     //System.out.println(padre.getNombre()+ " ---> El identificador ya ha sido declarado anteriormente");
                     sintactico += padre.getNombre()+"("+padre.getTipo()+") ---> El identificador ya ha sido declarado anteriormente\n";
+                    errorSemantico = true;
                 }else{
                     //System.out.println(padre.getNombre()+ "("+padre.getTipo()+")");
                     sintactico += padre.getNombre()+"("+padre.getTipo()+")\n";
@@ -296,6 +297,7 @@ public class JLexCompiler {
                         }else{
                             //System.out.println(padre.getNombre()+ " ---> El identificador \""+padre.getNombre()+"\" no ha sido declarado...");
                             sintactico += padre.getNombre()+" ---> El identificador \""+padre.getNombre()+"\" no ha sido declarado...\n";
+                            errorSemantico = true;
                             return;
                         }
                     }else    
@@ -304,7 +306,10 @@ public class JLexCompiler {
                             if(padre.getValor().contains("."))
                                 padre.setTipo("float");
                             else
-                                padre.setTipo("int");
+                                if(padre.getValor().equals("true") || padre.getValor().equals("false"))
+                                    padre.setTipo("bool");
+                                else
+                                    padre.setTipo("int");
                             sintactico += padre.getValor()+"("+padre.getTipo()+")\n";
                         }
                         else{
@@ -336,6 +341,7 @@ public class JLexCompiler {
             case "Expresion":
             case "Termino":
             case "SignoFactor":
+            case "B_factor":
             case "Sentencias":
             case ";":
             case "{":
@@ -346,6 +352,7 @@ public class JLexCompiler {
             case "Expresion_2":
             case "Termino_2":
             case "Seleccion":
+            case "Bloque":
                 return false;
             default:
                 return true;
@@ -446,6 +453,54 @@ public class JLexCompiler {
                         //System.out.print(codigo[i]);
                         break;
                     case 6:
+                        String expresion ="";
+                        for(int j = lim-1;j>=0;j-- )
+                            expresion+=codigo[i-j]+"\n";
+                        if(!((expresion.contains("*") || expresion.contains("*")) && (expresion.contains("+") || expresion.contains("-")))){
+                            String tipo = validarTipoAsignacion(expresion);
+                            //System.out.println(" --> "+tipoResultante);
+                            if(!tipo.contains("ERROR")){
+                                tablaSimbolos.put("T"+contadorTemporal, tipo);
+                                codigo[i-lim]+=" --> "+tipo+ " T"+contadorTemporal++;
+                            }else{
+                                codigo[i-lim]+=" --> "+tipo;
+                                errorSemantico = true;
+                            }
+                            break;
+                        }
+                        if(codigo[i-2].contains("*") || codigo[i-2].contains("/")){
+                            System.out.println("Entra");
+                            
+                            
+                            nuevoTipo = combinarTipos(codigo[i-1],codigo[i]);
+                            if(!nuevoTipo.contains("ERROR")){
+                                tablaSimbolos.put("T"+contadorTemporal, nuevoTipo);
+                                codigo[i-2]+=" --> "+nuevoTipo+ " T"+contadorTemporal++;
+                            }else{
+                                codigo[i-2]+=" --> "+nuevoTipo;
+                                errorSemantico = true;
+                            }
+                            nuevoTipo = combinarTipos(codigo[i-3],codigo[i-2]);
+                            if(!nuevoTipo.contains("ERROR")){
+                                tablaSimbolos.put("T"+contadorTemporal, nuevoTipo);
+                                codigo[i-4]+=" --> "+nuevoTipo+ " T"+contadorTemporal++;
+                            }else{
+                                codigo[i-4]+=" --> "+nuevoTipo;
+                                errorSemantico = true;
+                            }
+
+                            tipoResultante = compararTipos(codigo[i-5],codigo[i-4]);
+                            //System.out.println(" --> "+tipoResultante);
+                            codigo[i-6] += " --> "+tipoResultante;
+                            //System.out.println(codigo[i-5]);
+                            //System.out.println(codigo[i-4]);
+                            //System.out.println(codigo[i-3]);
+                            //System.out.println(codigo[i-2]);
+                            //System.out.println(codigo[i-1]);
+                            //System.out.print(codigo[i]);
+                            
+                            
+                        }else{
                         nuevoTipo = combinarTipos(codigo[i-2],codigo[i-1]);
                         if(!nuevoTipo.contains("ERROR")){
                             tablaSimbolos.put("T"+contadorTemporal, nuevoTipo);
@@ -472,13 +527,54 @@ public class JLexCompiler {
                         //System.out.println(codigo[i-2]);
                         //System.out.println(codigo[i-1]);
                         //System.out.print(codigo[i]);
+                        }
                         
                         break;
                     default:
+                        expresion ="";
+                        for(int j = lim-1;j>=0;j-- )
+                            expresion+=codigo[i-j]+"\n";
+                        tipo = validarTipoAsignacion(expresion);
+                        //System.out.println(" --> "+tipoResultante);
+                        if(!tipo.contains("ERROR")){
+                            tablaSimbolos.put("T"+contadorTemporal, tipo);
+                            codigo[i-lim]+=" --> "+tipo+ " T"+contadorTemporal++;
+                        }else{
+                            codigo[i-lim]+=" --> "+tipo;
+                            errorSemantico = true;
+                        }       
                 }
-                System.out.println();
+                //System.out.println();
             }else{
-                System.out.println();
+                if(!codigo[i].contains("identificador")&&(codigo[i].contains("==")||codigo[i].contains(">=")
+                        ||codigo[i].contains("<=")||codigo[i].contains("<")||codigo[i].contains(">"))){
+                    tablaSimbolos.put("T"+contadorTemporal, "bool");
+                    codigo[i]+=" --> bool T"+contadorTemporal++;                
+                }else
+                    if(codigo[i].contains("write")){
+                        int ind = i;
+                        do{
+                            if(ind+1>=codigo.length)
+                                break;
+                        }while(proximaSentencia(codigo[++ind]));
+                        int lim = i;
+                        i = ind-1;
+                        lim= i-lim;
+                        if(lim!=1){
+                            String expresion ="";
+                            for(int j = lim-1;j>=0;j-- )
+                                expresion+=codigo[i-j]+"\n";
+                            tipo = combinarTipoWrite(expresion);
+                            //System.out.println(" --> "+tipoResultante);
+                            if(!tipo.contains("ERROR")){
+                                tablaSimbolos.put("T"+contadorTemporal, tipo);
+                                codigo[i-lim+1]+=" --> "+tipo+ " T"+contadorTemporal++;
+                            }else{
+                                codigo[i-lim+1]+=" --> "+tipo;
+                                errorSemantico = true;
+                            }
+                        }
+                    }
             }
         }
         for(int i=0;i<codigo.length;i++)
@@ -520,7 +616,19 @@ public class JLexCompiler {
                     else
                         if(ident2.contains("bool"))
                             iguales = "ERROR SEMANTICO";
+            }
+            else{
+                if(ident1.contains("bool")){
+                    if(ident2.contains("int"))
+                        iguales = "ERROR SEMANTICO";
+                    else
+                        if(ident2.contains("float"))
+                            iguales = "ERROR SEMANTICO";
+                        else
+                            if(ident2.contains("bool"))
+                                iguales = "bool";
                 }
+            }
         }
         if(iguales.contains("ERROR"))
             errorSemantico = true;
@@ -548,9 +656,72 @@ public class JLexCompiler {
                     else
                         if(ident2.contains("bool"))
                             iguales = "ERROR SEMANTICO";
+            }else{
+                if(ident1.contains("bool")){
+                    if(ident2.contains("int"))
+                        iguales = "ERROR SEMANTICO";
+                    else
+                        if(ident2.contains("float"))
+                            iguales = "ERROR SEMANTICO";
+                        else
+                            if(ident2.contains("bool"))
+                                iguales = "bool";
                 }
+            }
         }
-            
+        if(iguales.contains("ERROR"))
+            errorSemantico = true;
         return iguales;
+    }
+
+    private static String validarTipoAsignacion(String expresion) {
+        String tipo = "";
+        String[] codigo = expresion.split("\n");
+        for(int i=1; i<codigo.length;i++){
+            tipo = compararTipos(codigo[0], codigo[i]);
+            if(tipo.contains("ERROR"))
+                break;
+        }
+        if(tipo.contains("ERROR"))
+            errorSemantico = true;
+        return tipo;
+    }
+
+    private static String combinarTipoWrite(String expresion) {
+        String tipo = "";
+        if((expresion.contains("int") || expresion.contains("float"))){
+            if(!expresion.contains("bool")){
+                if(expresion.contains("float"))
+                    tipo = "float";
+                else
+                    tipo = "int";
+            }else
+                tipo = "ERROR SEMANTICO";
+        }else{
+            if(expresion.contains("bool")){
+                tipo = "bool";
+            }else{
+                tipo = "";
+            }
+        }
+        
+        if(tipo.contains("ERROR"))
+            errorSemantico = true;
+        
+        return tipo;
+    }
+
+    private static String getTipo(String codigo) {
+        if(codigo.contains("int"))
+            return "int";
+        else 
+            if(codigo.contains("float"))
+                return "float";
+            else
+                if(codigo.contains("bool"))
+                    return "bool";
+                else
+                    return "";
+                
     }
 }

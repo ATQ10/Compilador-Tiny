@@ -364,7 +364,7 @@ B_factor ::=
 Bool_value ::=
     True:_true
 {:
-    Nodo tmp = new Nodo("bool");
+    Nodo tmp = new Nodo("boolean");
     tmp.setNumNodo(parser.contador++);
     parser.padre = (Nodo) tmp;
     tmp.setValor(_true.toString());

@@ -5,11 +5,15 @@ Var.	Tipo
 -------------------------------------
 T4	int
 a	float
+T5	bool
 b	float
+T6	float
+T7	bool
 x	int
 y	int
-T0	float
-T1	int
+z	bool
+T0	bool
+T1	float
 T2	float
 T3	float
 -------------------------------------
@@ -20,6 +24,8 @@ Program
 |__Declaracion
 |  |__a(float)
 |  |__b(float)
+|__Declaracion
+|  |__z(bool)
 |__Asignacion
 |  |__= --> int
 |     |__x(int)
@@ -29,58 +35,54 @@ Program
 |     |__y(int)
 |     |__4(int)
 |__Asignacion
-|  |__= --> float
-|     |__a(float)
-|     |__0.0(float)
+|  |__= --> ERROR SEMANTICO
+|     |__x(int)
+|     |__true(bool)
 |__Asignacion
 |  |__= --> float
 |     |__b(float)
 |     |__3.0(float)
 |__do
-|  |__Bloque
-|     |__if
-|        |__<
-|           |__x(int)
+|  |__if
+|     |__< --> bool T0
+|        |__x(int)
+|        |__y(int)
+|     |__then
+|     |__Asignacion
+|        |__= --> ERROR SEMANTICO
 |           |__y(int)
-|        |__then
-|        |__Bloque
-|           |__Asignacion
-|              |__= --> ERROR SEMANTICO
-|                 |__y(int)
-|                 |__- --> float T0
-|                    |__y(int)
-|                    |__1.0(float)
-|        |__else
-|           |__Bloque
-|              |__Asignacion
-|                 |__= --> int
-|                    |__x(int)
-|                    |__- --> int T1
-|                       |__x(int)
-|                       |__2(int)
-|              |__Asignacion
-|                 |__= --> float
-|                    |__a(float)
-|                    |__+ --> float T3
-|                       |__* --> float T2
-|                          |__a(float)
-|                          |__x(int)
-|                       |__b(float)
-|              |__Asignacion
-|                 |__= --> int
-|                    |__y(int)
-|                    |__- --> int T4
-|                       |__y(int)
-|                       |__1(int)
-|        |__fi
-|     |__while
-|        |__==
-|           |__a(float)
-|           |__3(int)
-|        |__Bloque
-|           |__write
+|           |__- --> float T1
+|              |__y(int)
+|              |__1.0(float)
+|     |__else
+|        |__Asignacion
+|           |__= --> bool
+|              |__z(bool)
+|              |__true(bool)
+|        |__Asignacion
+|           |__= --> float
 |              |__a(float)
+|              |__+ --> float T3
+|                 |__* --> float T2
+|                    |__a(float)
+|                    |__x(int)
+|                 |__b(float)
+|        |__Asignacion
+|           |__= --> int
+|              |__y(int)
+|              |__- --> int T4
+|                 |__y(int)
+|                 |__1(int)
+|     |__fi
+|  |__while
+|     |__== --> bool T5
+|        |__a(float)
+|        |__3(int)
+|     |__write
+|        |__+ --> float T6
+|           |__a(float)
+|           |__b(float)
 |  |__until
-|  |__>=
+|  |__>= --> bool T7
 |     |__y(int)
 |     |__0(int)

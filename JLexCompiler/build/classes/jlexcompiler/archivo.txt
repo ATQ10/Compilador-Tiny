@@ -1,21 +1,22 @@
 program {
 int x, y;
 float a, b;
+bool z;
 x=5; // comentario 1
 y=4; /* comentario 2 */
-a=0.0; 
+x=true;
 b=3.0;
 do {
 if(x<y) then {
 y=y-1.0;
 }else {
-x=x-2;
+z=true;
 a=a*x+b;
 y=y-1;
 } 
 fi
 while(a==3){
-write a;
+write a+b;
 }
 } until(y>=0);
 }

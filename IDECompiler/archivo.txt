@@ -1,8 +1,10 @@
-program {
+program { 
 int x, y;
 float a, b;
+// bool z;
+bool z; 
 x=5; // comentario 1
-y=4; /* comentario 2 */
+y=4; /* comentario 2*/ 
 a=0.0; 
 b=3.0;
 do {
@@ -10,13 +12,12 @@ if(x<y) then {
 y=y-1;
 }else {
 x=x-2;
-a=a*x+b;
+a=a*x-b;
 y=y-1;
 } 
 fi
 while(a==3){
-write a;
+write x-y;
 }
 } until(y>=0);
 }
- 
