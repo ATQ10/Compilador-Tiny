@@ -271,6 +271,39 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         }
         return null;
     }
+    
+    public String AbrirCodigoIntermedio(String rutaL){
+        Scanner entrada = null;
+        try {
+            if(!(new File(rutaL).exists())){
+            String resultadoE = "Nada que compilar :( \n";
+            //System.out.println(resultadoE);
+            return null;
+            }
+            String[] rutaFile = rutaL.split("/");
+            int ind = 0;
+            if(rutaFile.length > 0)
+                ind = rutaFile.length-1;
+            //Cargando
+            String rutaCodigoIntermedio = rutaL.replaceFirst(rutaFile[ind], "CodigoIntermedio.txt");
+            File fCodigo = new File(rutaCodigoIntermedio);
+            entrada = new Scanner(fCodigo);
+            CargarTextoCodigoIntermedio(entrada);
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        } catch (NullPointerException e) {
+            //JOptionPane.showMessageDialog(null, "No se ha seleccionado ningún fichero");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        } finally {
+            if (entrada != null) {
+                entrada.close();
+            }
+        }
+        return null;
+    }
+    
+    
     /**
      * Método para abrir archivos
      */
@@ -368,6 +401,18 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             jTextAreaSemantico.append(texto);
             //jTextAreaResultados.append(texto);
             jTextAreaSemantico.append("\n");
+            //jTextAreaResultados.append("\n");
+        }
+        return null;
+    }
+    
+    public String CargarTextoCodigoIntermedio(Scanner entrada){
+        jTextAreaCodInt.setText(null);
+        while (entrada.hasNext()) {
+            String texto = entrada.nextLine();
+            jTextAreaCodInt.append(texto);
+            //jTextAreaResultados.append(texto);
+            jTextAreaCodInt.append("\n");
             //jTextAreaResultados.append("\n");
         }
         return null;
@@ -503,6 +548,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         AbrirSintactico(ruta.replace("\\", "/"));
         AbrirErroresS(ruta.replace("\\", "/"));
         AbrirSemantico(ruta.replace("\\", "/"));
+        AbrirCodigoIntermedio(ruta.replace("\\", "/"));
     }
     /**
      * This method is called from within the constructor to initialize the form.

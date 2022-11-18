@@ -169,11 +169,16 @@ public class JLexCompiler {
         String rutaErroresS = arg[0].replaceFirst(ruta[ind], "ErroresS.txt");
         //Semantico
         String rutaSemantico = arg[0].replaceFirst(ruta[ind], "Semantico.txt");
+        //Codigo Intermedio
+        String rutaCodigoIntermedio = arg[0].replaceFirst(ruta[ind], "codigoIntermedio.txt");
         try {
             s.parse();  
             imprimirSintactico(s.padre,0);
             analizadorSemantico(s.padre);
             imprimirTablaSimbolos();
+            System.out.println("\n------------------ CÓDIGO INTERMEDIO -------------------\n");
+            codigoIntermedio();
+            System.out.println(CODIGOINTERMEDIO);
             System.out.println("Analisis sintactico realizado correctamente");
             Guardar(rutaSintactico, "Analisis sintactico realizado correctamente\n"+sintactico);
             if(errorSemantico)
@@ -182,6 +187,7 @@ public class JLexCompiler {
                 Guardar(rutaErroresS, "");
             //Guardar(rutaSemantico, tablaDeSimbolos + semantico);
             Guardar(rutaSemantico, tablaDeSimbolos + arbolTipado);
+            Guardar(rutaCodigoIntermedio, CODIGOINTERMEDIO);
             
             //imprimir(s.padre,0);
             //txtAnalizarSin.setForeground(new Color(25, 111, 61));
@@ -348,6 +354,7 @@ public class JLexCompiler {
             case "(":
             case "}":
             case ")":
+            case "Factor":
             case "Relacion_2":
             case "Expresion_2":
             case "Termino_2":
@@ -499,7 +506,6 @@ public class JLexCompiler {
                             //System.out.println(codigo[i-1]);
                             //System.out.print(codigo[i]);
                             
-                            
                         }else{
                         nuevoTipo = combinarTipos(codigo[i-2],codigo[i-1]);
                         if(!nuevoTipo.contains("ERROR")){
@@ -577,8 +583,11 @@ public class JLexCompiler {
                     }
             }
         }
-        for(int i=0;i<codigo.length;i++)
+        for(int i=0;i<codigo.length;i++){
+            if(i==codigo.length-1 && codigo[i].contains("-->"))
+                codigo[i] = codigo[i].split("-->")[0];
             arbolTipado+=codigo[i]+"\n";
+        }
         System.out.println(arbolTipado);
     }
 
@@ -723,5 +732,188 @@ public class JLexCompiler {
                 else
                     return "";
                 
+    }
+    
+    static int temporalCI = 1;
+    static String CODIGOINTERMEDIO = "";
+    private static void codigoIntermedio() {
+        String codigoI = semantico;
+        Flujo flujo = new Flujo();
+        codigoI = codigoI.replace("|", "");
+        codigoI = codigoI.replace("_", "");
+        codigoI = codigoI.replace("--> int", "");
+        codigoI = codigoI.replace("--> float", "");
+        codigoI = codigoI.replace("--> bool", "");
+        codigoI = codigoI.replace(" ", "");
+        //System.out.println(codigoI+"\n------------------\n");
+        
+        //Array por linea de codigo de arbol
+        String[] codI = codigoI.split("\n");
+        
+        //Recorrer linea a linea de codigo de arbol
+        for(int i = 0; i<codI.length; i++){
+            //Declaracion
+            if(codI[i].contains("Declaracion")){
+                i++;
+                while(codI[i].contains("int") || codI[i].contains("float") || codI[i].contains("bool")){
+                    CODIGOINTERMEDIO+=((codI[i].split("\\(|\\)"))[1]+" "+(codI[i].split("\\(|\\)"))[0])+"\n";
+                    i++;
+                }
+                i--;
+            }else
+            //Asignacion
+            if(codI[i].contains("Asignacion")){
+                i++;
+                int tipoAsignacion = 0;
+                while(codI[i].contains("=") || codI[i].contains("int") || codI[i].contains("float") || codI[i].contains("bool")
+                        || codI[i].contains("-")|| codI[i].contains("+")|| codI[i].contains("*")|| codI[i].contains("/")){
+                    tipoAsignacion++;
+                    i++;
+                }
+                switch (tipoAsignacion) {
+                    case 3:
+                        i -= tipoAsignacion;    
+                        String asignacion = (codI[i+1] + codI[i]+ codI[i+2].replace("true", "1").replace("false", "0"));
+                        asignacion=asignacion.replace("(int)", "");
+                        asignacion=asignacion.replace("(float)", "");
+                        asignacion=asignacion.replace("(bool)", "");
+                        CODIGOINTERMEDIO+=(asignacion)+"\n";
+                        i+=tipoAsignacion;
+                        break;
+                    case 5:
+                        i -= tipoAsignacion;
+                        if(codI[i+1].equals(codI[i+3])){
+                           String temporal = "T"+(temporalCI++);
+                            CODIGOINTERMEDIO+=((temporal+" = "+codI[i+3]+codI[i+2]+codI[i+4]).replace("(int)","").replace("(float)","").replace("(bool)",""))+"\n";
+                            CODIGOINTERMEDIO+=((codI[i+1]+ " = " +temporal).replace("(int)","").replace("(float)","").replace("(bool)",""))+"\n"; 
+                        }else{
+                            CODIGOINTERMEDIO+=((codI[i+1]+ " = "+codI[i+3]+codI[i+2]+codI[i+4]).replace("(int)","").replace("(float)","").replace("(bool)",""))+"\n"; 
+                        }
+                        i+=tipoAsignacion;
+                        break;
+                    case 7:
+                        i -= tipoAsignacion;
+                        //if(codI[i+1].equals(codI[i+3])){
+                            String temporal = "T"+(temporalCI++);
+                            CODIGOINTERMEDIO+=((temporal+" = "+codI[i+4]+codI[i+3]+codI[i+5]).replace("(int)","").replace("(float)","").replace("(bool)",""))+"\n";
+                            String temporal2 = "T"+(temporalCI++);
+                            CODIGOINTERMEDIO+=((temporal2+ " = " +temporal+codI[i+2]+codI[i+6]).replace("(int)","").replace("(float)","").replace("(bool)",""))+"\n"; 
+                            CODIGOINTERMEDIO+=((codI[i+1]+ " = " +temporal2).replace("(int)","").replace("(float)","").replace("(bool)",""))+"\n"; 
+                        //}else{
+                        //    System.out.println((codI[i+1]+ " = "+codI[i+3]+codI[i+2]+codI[i+4]).replace("(int)","").replace("(float)","").replace("(bool)","")); 
+                        //}
+                        i+=tipoAsignacion;
+                        break;
+                    default:
+                        //System.out.println(tipoAsignacion);
+                }
+                i--;
+            }else
+            //do
+            if(codI[i].contains("do")){
+                CODIGOINTERMEDIO+=(flujo.newEtiqueta("do", false)+" ");
+            }else
+            //write
+            if(codI[i].contains("write")){
+                CODIGOINTERMEDIO+=((codI[i] + " "+codI[++i]).replace("(int)","").replace("(float)","").replace("(bool)",""))+"\n"; 
+            }else
+            //if
+            if(codI[i].contains("if")){
+                if(ifContain("and",codI,i)){
+                    CODIGOINTERMEDIO+=(("if "+codI[i+2] + codI[i+1] + codI[i+3] + " goto " + flujo.newEtiqueta("if", false).replace(":","")).replace("(int)","").replace("(float)","").replace("(bool)",""))+"\n";
+                    Codigo codigo = (Codigo) flujo.etiqueta.get("if");
+                    CODIGOINTERMEDIO+=("goto "+codigo.falso.replace(":", ""))+"\n";
+                    CODIGOINTERMEDIO+=(codigo.verdad+" ");
+                    i+=4;
+                    CODIGOINTERMEDIO+=(("if "+codI[i+2] + codI[i+1] + codI[i+3] + " goto " + flujo.newEtiqueta("and", false).replace(":","")).replace("(int)","").replace("(float)","").replace("(bool)",""))+"\n";
+                    CODIGOINTERMEDIO+=("goto "+codigo.falso.replace(":", ""))+"\n";
+                    codigo = (Codigo) flujo.etiqueta.get("and");
+                    CODIGOINTERMEDIO+=(codigo.verdad+" ");
+                    i+=3;
+                }else{
+                    CODIGOINTERMEDIO+=(("if "+codI[i+2] + codI[i+1] + codI[i+3] + " goto " + flujo.newEtiqueta("if", false).replace(":","")).replace("(int)","").replace("(float)","").replace("(bool)",""))+"\n";
+                    Codigo codigo = (Codigo) flujo.etiqueta.get("if");
+                    CODIGOINTERMEDIO+=("goto "+codigo.falso.replace(":", ""))+"\n";
+                    CODIGOINTERMEDIO+=(codigo.verdad+" ");
+                    i+=4;
+                }
+            }else
+            //else
+            if(codI[i].contains("else")){
+                CODIGOINTERMEDIO+=(flujo.newEtiqueta("else", false).replace(":", ""))+"\n";
+                Codigo codigo = (Codigo) flujo.etiqueta.get("if");
+                CODIGOINTERMEDIO+=(codigo.falso+" ");
+            }else
+            //fi
+            if(codI[i].contains("fi")){
+                if(flujo.existEtiqueta("else")){
+                    Codigo codigo = (Codigo) flujo.etiqueta.get("else");
+                    CODIGOINTERMEDIO+=(codigo.falso)+"\n";
+                }else{
+                    Codigo codigo = (Codigo) flujo.etiqueta.get("if");
+                    CODIGOINTERMEDIO+=(codigo.falso)+"\n";
+                }
+            }else
+            //while
+            if(codI[i].contains("while")){
+                if(ifContain("or",codI,i)){
+                    CODIGOINTERMEDIO+=(flujo.newEtiqueta("while", false));
+                    CODIGOINTERMEDIO+=(("if "+codI[i+2] + codI[i+1] + codI[i+3] + " goto " + flujo.newEtiqueta("if", false).replace(":","")).replace("(int)","").replace("(float)","").replace("(bool)",""))+"\n";
+                    Codigo codigo = (Codigo) flujo.etiqueta.get("if");
+                    CODIGOINTERMEDIO+=("goto "+codigo.falso.replace(":", ""))+"\n";
+                    CODIGOINTERMEDIO+=(codigo.falso+" ");
+                    i+=4;
+                    CODIGOINTERMEDIO+=(("if "+codI[i+2] + codI[i+1] + codI[i+3] + " goto " + flujo.newEtiqueta("or", false).replace(":","")).replace("(int)","").replace("(float)","").replace("(bool)",""))+"\n";
+                    codigo = (Codigo) flujo.etiqueta.get("or");
+                    CODIGOINTERMEDIO+=("goto "+codigo.falso.replace(":", ""))+"\n";
+                    Codigo codigoWhile = (Codigo) flujo.etiqueta.get("while");
+                    codigoWhile.falso = codigo.falso;
+                    flujo.setEtiqueta("while",codigoWhile);
+                    codigo = (Codigo) flujo.etiqueta.get("if");
+                    CODIGOINTERMEDIO+=(codigo.verdad+" ");
+                    i+=3;
+                }else{
+                    CODIGOINTERMEDIO+=(flujo.newEtiqueta("while", false));
+                    CODIGOINTERMEDIO+=(("if "+codI[i+2] + codI[i+1] + codI[i+3] + " goto " + flujo.newEtiqueta("if", false).replace(":","")).replace("(int)","").replace("(float)","").replace("(bool)",""))+"\n";
+                    Codigo codigoWhile = (Codigo) flujo.etiqueta.get("while");
+                    Codigo codigoIf = (Codigo) flujo.etiqueta.get("if");
+                    codigoWhile.falso = codigoIf.falso;
+                    codigoWhile.verdad = codigoIf.verdad;
+                    flujo.setEtiqueta("while",codigoWhile);
+                    CODIGOINTERMEDIO+=("goto "+codigoWhile.falso.replace(":", ""))+"\n";
+                    CODIGOINTERMEDIO+=(codigoWhile.verdad+" ");
+                    i+=4;
+                }
+            }else
+            //while
+            if(codI[i].contains("endWhile")){
+                Codigo codigo = (Codigo) flujo.etiqueta.get("while");
+                CODIGOINTERMEDIO+=("goto "+codigo.declaracion.replace(":", ""))+"\n";
+                CODIGOINTERMEDIO+=(codigo.falso)+"\n";
+            }else
+            //until
+            if(codI[i].contains("until")){
+                Codigo codigoDo = (Codigo) flujo.etiqueta.get("do");
+                flujo.newEtiqueta("until",false);
+                Codigo codigoUntil = (Codigo) flujo.etiqueta.get("until");
+                codigoUntil.verdad = codigoDo.declaracion;
+                flujo.setEtiqueta("until", codigoUntil);
+                CODIGOINTERMEDIO+=(("if "+codI[i+2] + codI[i+1] + codI[i+3] + " goto " + codigoUntil.verdad.replace(":","")).replace("(int)","").replace("(float)","").replace("(bool)","").replace("true", "1").replace("false", "0"))+"\n";
+                CODIGOINTERMEDIO+=("goto "+codigoUntil.falso.replace(":", ""))+"\n";
+                CODIGOINTERMEDIO+=(codigoUntil.falso)+"\n";
+
+            }
+        }
+    }
+
+    private static boolean ifContain(String andOr,String [] cod, int i) {
+        boolean existe = false;
+        while(!cod[i++].contains("then") && i<cod.length){
+            if(cod[i].contains(andOr)){
+                return true;
+            }
+        }
+        
+        return existe;
     }
 }

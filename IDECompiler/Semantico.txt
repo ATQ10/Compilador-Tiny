@@ -8,13 +8,15 @@ a	float
 T5	int
 b	float
 T6	bool
-T7	int
-T8	bool
+c	bool
+T7	bool
+T8	float
+T9	float
+T10	bool
 x	int
 y	int
-z	bool
 T0	bool
-T1	int
+T1	bool
 T2	int
 T3	float
 -------------------------------------
@@ -26,7 +28,11 @@ Program
 |  |__a(float)
 |  |__b(float)
 |__Declaracion
-|  |__z(bool)
+|  |__c(bool)
+|__Asignacion
+|  |__= --> bool
+|     |__c(bool)
+|     |__false(bool)
 |__Asignacion
 |  |__= --> int
 |     |__x(int)
@@ -38,23 +44,25 @@ Program
 |__Asignacion
 |  |__= --> float
 |     |__a(float)
-|     |__0.0(float)
+|     |__0(int)
 |__Asignacion
 |  |__= --> float
 |     |__b(float)
-|     |__3.0(float)
+|     |__3(int)
 |__do
 |  |__if
 |     |__< --> bool T0
 |        |__x(int)
 |        |__y(int)
+|     |__and
+|        |__>= --> bool T1
+|           |__y(int)
+|           |__0(int)
 |     |__then
 |     |__Asignacion
-|        |__= --> int
-|           |__y(int)
-|           |__- --> int T1
-|              |__y(int)
-|              |__1(int)
+|        |__= --> bool
+|           |__c(bool)
+|           |__true(bool)
 |     |__else
 |        |__Asignacion
 |           |__= --> int
@@ -65,7 +73,7 @@ Program
 |        |__Asignacion
 |           |__= --> float
 |              |__a(float)
-|              |__- --> float T4
+|              |__+ --> float T4
 |                 |__* --> float T3
 |                    |__a(float)
 |                    |__x(int)
@@ -81,11 +89,27 @@ Program
 |     |__== --> bool T6
 |        |__a(float)
 |        |__3(int)
-|     |__write
-|        |__- --> int T7
+|     |__or
+|        |__== --> bool T7
 |           |__x(int)
 |           |__y(int)
+|     |__then
+|     |__write
+|        |__a(float)
+|     |__Asignacion
+|        |__= --> float
+|           |__a(float)
+|           |__+ --> float T8
+|              |__a(float)
+|              |__1(int)
+|     |__Asignacion
+|        |__= --> ERROR SEMANTICO
+|           |__x(int)
+|           |__- --> float T9
+|              |__a(float)
+|              |__y(int)
+|     |__endWhile
 |  |__until
-|  |__>= --> bool T8
-|     |__y(int)
-|     |__0(int)
+|  |__== --> bool T10
+|     |__c(bool)
+|     |__true(bool)

@@ -213,7 +213,9 @@ Iteracion ::=
     tmp.addHijo(new Nodo(abreP.toString()));
     tmp.addHijo((Nodo)Bexp);
     tmp.addHijo(new Nodo(cierraP.toString()));
+    tmp.addHijo(new Nodo("then"));
     tmp.addHijo((Nodo)bloq);
+    tmp.addHijo(new Nodo("endWhile"));
     RESULT=tmp;
 :}
 ;
@@ -372,7 +374,7 @@ Bool_value ::=
 :}
    | False:_false
 {:
-    Nodo tmp = new Nodo("bool");
+    Nodo tmp = new Nodo("boolean");
     tmp.setNumNodo(parser.contador++);
     parser.padre = (Nodo) tmp;
     tmp.setValor(_false.toString());
@@ -555,7 +557,7 @@ Factor ::=
     tmp.addHijo(new Nodo(cierraP.toString()));
     RESULT=tmp;
 :} | Numero:num
-{:  Nodo tmp = new Nodo("Factor");
+{:  Nodo tmp = new Nodo(num.toString());
     tmp.setNumNodo(parser.contador++);
     parser.padre = (Nodo) tmp;
     tmp.setValor(num.toString());

@@ -1,23 +1,25 @@
-program { 
+program {
 int x, y;
 float a, b;
-// bool z;
-bool z; 
+bool c;
+c = false;
 x=5; // comentario 1
-y=4; /* comentario 2*/ 
-a=0.0; 
-b=3.0;
+y=4; /* comentario 2 */
+a=0;
+b=3;
 do {
-if(x<y) then {
-y=y-1;
-}else {
+if(x<y and y>=0) then{
+c=true;
+} else {
 x=x-2;
-a=a*x-b;
+a=a*x+b;
 y=y-1;
 } 
 fi
-while(a==3){
-write x-y;
+while(a==3 or x==y){
+write a;
+a=a+1;
+x=a-y; 
 }
-} until(y>=0);
+} until(c == (true));
 }
